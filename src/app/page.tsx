@@ -1,6 +1,14 @@
+import AuthOption from '@/server/auth';
+import { getServerSession } from 'next-auth';
+import { redirect } from 'next/navigation';
 import Image from 'next/image'
 
-export default function Home() {
+export default async function Home() {
+  const session = await getServerSession(AuthOption);
+  console.log(session)
+  if (!session) {
+      redirect('/api/auth/signin');
+  }
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
@@ -74,6 +82,14 @@ export default function Home() {
           </p>
         </a>
 
+        <div>
+          <h2 className={`mb-3 text-2xl font-semibold`}>
+          Hellow {session.user?.name}
+          </h2>
+          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
+            Hellow {session.user?.name}
+          </p>
+        </div>
         <a
           href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
           className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
