@@ -83,7 +83,7 @@ export default async function Home() {
         </a>
 
         <div>
-          <h2 className={`mb-3 text-2xl font-semibold`}>
+          <h2 className={`mb-3 text-2xl font-semibold bg-blue-600`}>
           Hellow {session.user?.name}
           </h2>
           <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
