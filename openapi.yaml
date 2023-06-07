@@ -1,0 +1,56 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: My API
+  description: This is the API
+servers:
+  - url: http://localhost:3000/api
+components:
+  schemas:
+    nodeUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        ipAddress:
+          type: string
+        cpu:
+          type: integer
+        memory:
+          type: integer
+        status:
+          type: string
+          enum:
+            - offline
+            - idle
+            - allocated
+            - full
+      required:
+        - name
+        - ipAddress
+        - cpu
+        - memory
+        - status
+  parameters: {}
+paths:
+  /node:
+    post:
+      description: report node status from flowy daemon
+      summary: Get a single job
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/nodeUpdate'
+      responses:
+        '200':
+          description: Object with job data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                required:
+                  - status
