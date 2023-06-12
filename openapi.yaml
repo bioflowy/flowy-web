@@ -54,3 +54,318 @@ paths:
                     type: string
                 required:
                   - status
+  /jobs:
+    get:
+      description: report node status from flowy daemon
+      summary: get jobs by nodeName
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nodeName:
+                  type: string
+              required:
+                - nodeName
+      responses:
+        '200':
+          description: Object with job data.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      example: 121
+                    name:
+                      type: string
+                      example: John Doe
+                    command:
+                      type: array
+                      items:
+                        type: string
+                      example:
+                        - ls
+                        - '-l'
+                    exitCode:
+                      type: integer
+                    cpu:
+                      type: integer
+                    memory:
+                      type: integer
+                    status:
+                      type: string
+                    createdAt:
+                      type: string
+                    updatedAt:
+                      type: string
+                  required:
+                    - id
+                    - name
+                    - command
+                    - exitCode
+                    - cpu
+                    - memory
+                    - status
+                    - createdAt
+                    - updatedAt
+  /jobs/{jobId}:
+    get:
+      description: report node status from flowy daemon
+      summary: get jobs by nodeName
+      parameters:
+        - schema:
+            type: integer
+          required: true
+          name: jobId
+          in: path
+      responses:
+        '200':
+          description: Object with job data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 121
+                  name:
+                    type: string
+                    example: John Doe
+                  command:
+                    type: array
+                    items:
+                      type: string
+                    example:
+                      - ls
+                      - '-l'
+                  exitCode:
+                    type: integer
+                  cpu:
+                    type: integer
+                  memory:
+                    type: integer
+                  status:
+                    type: string
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                  inputs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        resourceId:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 1234
+                            status:
+                              type: string
+                              example: uploading
+                            name:
+                              type: string
+                              example: test1_R1.fastq
+                            size:
+                              type: integer
+                              nullable: true
+                            path:
+                              type: string
+                              nullable: true
+                            createdAt:
+                              type: string
+                            updatedAt:
+                              type: string
+                            type:
+                              type: string
+                              example: text
+                          required:
+                            - id
+                            - status
+                            - name
+                            - size
+                            - path
+                            - createdAt
+                            - updatedAt
+                            - type
+                      required:
+                        - name
+                        - resourceId
+                  outputs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        resourceId:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 1234
+                            status:
+                              type: string
+                              example: uploading
+                            name:
+                              type: string
+                              example: test1_R1.fastq
+                            size:
+                              type: integer
+                              nullable: true
+                            path:
+                              type: string
+                              nullable: true
+                            createdAt:
+                              type: string
+                            updatedAt:
+                              type: string
+                            type:
+                              type: string
+                              example: text
+                          required:
+                            - id
+                            - status
+                            - name
+                            - size
+                            - path
+                            - createdAt
+                            - updatedAt
+                            - type
+                      required:
+                        - name
+                        - resourceId
+                required:
+                  - id
+                  - name
+                  - command
+                  - exitCode
+                  - cpu
+                  - memory
+                  - status
+                  - createdAt
+                  - updatedAt
+                  - inputs
+                  - outputs
+    post:
+      description: report node status from flowy daemon
+      summary: get jobs by nodeName
+      parameters:
+        - schema:
+            type: integer
+          required: true
+          name: jobId
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                exitCode:
+                  type: integer
+                status:
+                  type: string
+                  enum:
+                    - created
+                    - queued
+                    - running
+                    - finished
+                    - failed
+              required:
+                - exitCode
+                - status
+      responses:
+        '200':
+          description: Object with job data.
+  /resources/{resourceId}:
+    get:
+      description: report node status from flowy daemon
+      summary: get jobs by nodeName
+      parameters:
+        - schema:
+            type: integer
+          required: true
+          name: resourceId
+          in: path
+      responses:
+        '200':
+          description: Updated successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 1234
+                  status:
+                    type: string
+                    example: uploading
+                  name:
+                    type: string
+                    example: test1_R1.fastq
+                  size:
+                    type: integer
+                    nullable: true
+                  path:
+                    type: string
+                    nullable: true
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+                  type:
+                    type: string
+                    example: text
+                required:
+                  - id
+                  - status
+                  - name
+                  - size
+                  - path
+                  - createdAt
+                  - updatedAt
+                  - type
+    post:
+      description: report node status from flowy daemon
+      summary: get jobs by nodeName
+      parameters:
+        - schema:
+            type: integer
+          required: true
+          name: resourceId
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  example: uploading
+                size:
+                  type: integer
+                  nullable: true
+                  example: 12345
+                  format: int64
+                path:
+                  type: string
+                  nullable: true
+              required:
+                - status
+                - size
+                - path
+      responses:
+        '200':
+          description: Object with job data.

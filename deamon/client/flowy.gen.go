@@ -12,6 +12,8 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/deepmap/oapi-codegen/pkg/runtime"
 )
 
 // Defines values for NodeUpdateStatus.
@@ -20,6 +22,15 @@ const (
 	Full      NodeUpdateStatus = "full"
 	Idle      NodeUpdateStatus = "idle"
 	Offline   NodeUpdateStatus = "offline"
+)
+
+// Defines values for PostJobsJobIdJSONBodyStatus.
+const (
+	Created  PostJobsJobIdJSONBodyStatus = "created"
+	Failed   PostJobsJobIdJSONBodyStatus = "failed"
+	Finished PostJobsJobIdJSONBodyStatus = "finished"
+	Queued   PostJobsJobIdJSONBodyStatus = "queued"
+	Running  PostJobsJobIdJSONBodyStatus = "running"
 )
 
 // NodeUpdate defines model for nodeUpdate.
@@ -34,8 +45,38 @@ type NodeUpdate struct {
 // NodeUpdateStatus defines model for NodeUpdate.Status.
 type NodeUpdateStatus string
 
+// GetJobsJSONBody defines parameters for GetJobs.
+type GetJobsJSONBody struct {
+	NodeName string `json:"nodeName"`
+}
+
+// PostJobsJobIdJSONBody defines parameters for PostJobsJobId.
+type PostJobsJobIdJSONBody struct {
+	ExitCode int                         `json:"exitCode"`
+	Status   PostJobsJobIdJSONBodyStatus `json:"status"`
+}
+
+// PostJobsJobIdJSONBodyStatus defines parameters for PostJobsJobId.
+type PostJobsJobIdJSONBodyStatus string
+
+// PostResourcesResourceIdJSONBody defines parameters for PostResourcesResourceId.
+type PostResourcesResourceIdJSONBody struct {
+	Path   *string `json:"path"`
+	Size   *int64  `json:"size"`
+	Status string  `json:"status"`
+}
+
+// GetJobsJSONRequestBody defines body for GetJobs for application/json ContentType.
+type GetJobsJSONRequestBody GetJobsJSONBody
+
+// PostJobsJobIdJSONRequestBody defines body for PostJobsJobId for application/json ContentType.
+type PostJobsJobIdJSONRequestBody PostJobsJobIdJSONBody
+
 // PostNodeJSONRequestBody defines body for PostNode for application/json ContentType.
 type PostNodeJSONRequestBody = NodeUpdate
+
+// PostResourcesResourceIdJSONRequestBody defines body for PostResourcesResourceId for application/json ContentType.
+type PostResourcesResourceIdJSONRequestBody PostResourcesResourceIdJSONBody
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -110,10 +151,91 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
+	// GetJobs request with any body
+	GetJobsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	GetJobs(ctx context.Context, body GetJobsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetJobsJobId request
+	GetJobsJobId(ctx context.Context, jobId int, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostJobsJobId request with any body
+	PostJobsJobIdWithBody(ctx context.Context, jobId int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostJobsJobId(ctx context.Context, jobId int, body PostJobsJobIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// PostNode request with any body
 	PostNodeWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PostNode(ctx context.Context, body PostNodeJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetResourcesResourceId request
+	GetResourcesResourceId(ctx context.Context, resourceId int, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostResourcesResourceId request with any body
+	PostResourcesResourceIdWithBody(ctx context.Context, resourceId int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostResourcesResourceId(ctx context.Context, resourceId int, body PostResourcesResourceIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+}
+
+func (c *Client) GetJobsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetJobsRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetJobs(ctx context.Context, body GetJobsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetJobsRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetJobsJobId(ctx context.Context, jobId int, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetJobsJobIdRequest(c.Server, jobId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostJobsJobIdWithBody(ctx context.Context, jobId int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostJobsJobIdRequestWithBody(c.Server, jobId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostJobsJobId(ctx context.Context, jobId int, body PostJobsJobIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostJobsJobIdRequest(c.Server, jobId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
 }
 
 func (c *Client) PostNodeWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -140,6 +262,163 @@ func (c *Client) PostNode(ctx context.Context, body PostNodeJSONRequestBody, req
 	return c.Client.Do(req)
 }
 
+func (c *Client) GetResourcesResourceId(ctx context.Context, resourceId int, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetResourcesResourceIdRequest(c.Server, resourceId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostResourcesResourceIdWithBody(ctx context.Context, resourceId int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostResourcesResourceIdRequestWithBody(c.Server, resourceId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostResourcesResourceId(ctx context.Context, resourceId int, body PostResourcesResourceIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostResourcesResourceIdRequest(c.Server, resourceId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// NewGetJobsRequest calls the generic GetJobs builder with application/json body
+func NewGetJobsRequest(server string, body GetJobsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewGetJobsRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewGetJobsRequestWithBody generates requests for GetJobs with any type of body
+func NewGetJobsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/jobs")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetJobsJobIdRequest generates requests for GetJobsJobId
+func NewGetJobsJobIdRequest(server string, jobId int) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "jobId", runtime.ParamLocationPath, jobId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/jobs/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostJobsJobIdRequest calls the generic PostJobsJobId builder with application/json body
+func NewPostJobsJobIdRequest(server string, jobId int, body PostJobsJobIdJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostJobsJobIdRequestWithBody(server, jobId, "application/json", bodyReader)
+}
+
+// NewPostJobsJobIdRequestWithBody generates requests for PostJobsJobId with any type of body
+func NewPostJobsJobIdRequestWithBody(server string, jobId int, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "jobId", runtime.ParamLocationPath, jobId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/jobs/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewPostNodeRequest calls the generic PostNode builder with application/json body
 func NewPostNodeRequest(server string, body PostNodeJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -161,6 +440,87 @@ func NewPostNodeRequestWithBody(server string, contentType string, body io.Reade
 	}
 
 	operationPath := fmt.Sprintf("/node")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetResourcesResourceIdRequest generates requests for GetResourcesResourceId
+func NewGetResourcesResourceIdRequest(server string, resourceId int) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "resourceId", runtime.ParamLocationPath, resourceId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/resources/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostResourcesResourceIdRequest calls the generic PostResourcesResourceId builder with application/json body
+func NewPostResourcesResourceIdRequest(server string, resourceId int, body PostResourcesResourceIdJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostResourcesResourceIdRequestWithBody(server, resourceId, "application/json", bodyReader)
+}
+
+// NewPostResourcesResourceIdRequestWithBody generates requests for PostResourcesResourceId with any type of body
+func NewPostResourcesResourceIdRequestWithBody(server string, resourceId int, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "resourceId", runtime.ParamLocationPath, resourceId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/resources/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -223,10 +583,142 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
+	// GetJobs request with any body
+	GetJobsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GetJobsResponse, error)
+
+	GetJobsWithResponse(ctx context.Context, body GetJobsJSONRequestBody, reqEditors ...RequestEditorFn) (*GetJobsResponse, error)
+
+	// GetJobsJobId request
+	GetJobsJobIdWithResponse(ctx context.Context, jobId int, reqEditors ...RequestEditorFn) (*GetJobsJobIdResponse, error)
+
+	// PostJobsJobId request with any body
+	PostJobsJobIdWithBodyWithResponse(ctx context.Context, jobId int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostJobsJobIdResponse, error)
+
+	PostJobsJobIdWithResponse(ctx context.Context, jobId int, body PostJobsJobIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PostJobsJobIdResponse, error)
+
 	// PostNode request with any body
 	PostNodeWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeResponse, error)
 
 	PostNodeWithResponse(ctx context.Context, body PostNodeJSONRequestBody, reqEditors ...RequestEditorFn) (*PostNodeResponse, error)
+
+	// GetResourcesResourceId request
+	GetResourcesResourceIdWithResponse(ctx context.Context, resourceId int, reqEditors ...RequestEditorFn) (*GetResourcesResourceIdResponse, error)
+
+	// PostResourcesResourceId request with any body
+	PostResourcesResourceIdWithBodyWithResponse(ctx context.Context, resourceId int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostResourcesResourceIdResponse, error)
+
+	PostResourcesResourceIdWithResponse(ctx context.Context, resourceId int, body PostResourcesResourceIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PostResourcesResourceIdResponse, error)
+}
+
+type GetJobsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *[]struct {
+		Command   []string `json:"command"`
+		Cpu       int      `json:"cpu"`
+		CreatedAt string   `json:"createdAt"`
+		ExitCode  int      `json:"exitCode"`
+		Id        int      `json:"id"`
+		Memory    int      `json:"memory"`
+		Name      string   `json:"name"`
+		Status    string   `json:"status"`
+		UpdatedAt string   `json:"updatedAt"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r GetJobsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetJobsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetJobsJobIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		Command   []string `json:"command"`
+		Cpu       int      `json:"cpu"`
+		CreatedAt string   `json:"createdAt"`
+		ExitCode  int      `json:"exitCode"`
+		Id        int      `json:"id"`
+		Inputs    []struct {
+			Name       string `json:"name"`
+			ResourceId struct {
+				CreatedAt string  `json:"createdAt"`
+				Id        int     `json:"id"`
+				Name      string  `json:"name"`
+				Path      *string `json:"path"`
+				Size      *int    `json:"size"`
+				Status    string  `json:"status"`
+				Type      string  `json:"type"`
+				UpdatedAt string  `json:"updatedAt"`
+			} `json:"resourceId"`
+		} `json:"inputs"`
+		Memory  int    `json:"memory"`
+		Name    string `json:"name"`
+		Outputs []struct {
+			Name       string `json:"name"`
+			ResourceId struct {
+				CreatedAt string  `json:"createdAt"`
+				Id        int     `json:"id"`
+				Name      string  `json:"name"`
+				Path      *string `json:"path"`
+				Size      *int    `json:"size"`
+				Status    string  `json:"status"`
+				Type      string  `json:"type"`
+				UpdatedAt string  `json:"updatedAt"`
+			} `json:"resourceId"`
+		} `json:"outputs"`
+		Status    string `json:"status"`
+		UpdatedAt string `json:"updatedAt"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r GetJobsJobIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetJobsJobIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostJobsJobIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+}
+
+// Status returns HTTPResponse.Status
+func (r PostJobsJobIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostJobsJobIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
 }
 
 type PostNodeResponse struct {
@@ -253,6 +745,101 @@ func (r PostNodeResponse) StatusCode() int {
 	return 0
 }
 
+type GetResourcesResourceIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		CreatedAt string  `json:"createdAt"`
+		Id        int     `json:"id"`
+		Name      string  `json:"name"`
+		Path      *string `json:"path"`
+		Size      *int    `json:"size"`
+		Status    string  `json:"status"`
+		Type      string  `json:"type"`
+		UpdatedAt string  `json:"updatedAt"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r GetResourcesResourceIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetResourcesResourceIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostResourcesResourceIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+}
+
+// Status returns HTTPResponse.Status
+func (r PostResourcesResourceIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostResourcesResourceIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// GetJobsWithBodyWithResponse request with arbitrary body returning *GetJobsResponse
+func (c *ClientWithResponses) GetJobsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GetJobsResponse, error) {
+	rsp, err := c.GetJobsWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetJobsResponse(rsp)
+}
+
+func (c *ClientWithResponses) GetJobsWithResponse(ctx context.Context, body GetJobsJSONRequestBody, reqEditors ...RequestEditorFn) (*GetJobsResponse, error) {
+	rsp, err := c.GetJobs(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetJobsResponse(rsp)
+}
+
+// GetJobsJobIdWithResponse request returning *GetJobsJobIdResponse
+func (c *ClientWithResponses) GetJobsJobIdWithResponse(ctx context.Context, jobId int, reqEditors ...RequestEditorFn) (*GetJobsJobIdResponse, error) {
+	rsp, err := c.GetJobsJobId(ctx, jobId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetJobsJobIdResponse(rsp)
+}
+
+// PostJobsJobIdWithBodyWithResponse request with arbitrary body returning *PostJobsJobIdResponse
+func (c *ClientWithResponses) PostJobsJobIdWithBodyWithResponse(ctx context.Context, jobId int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostJobsJobIdResponse, error) {
+	rsp, err := c.PostJobsJobIdWithBody(ctx, jobId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostJobsJobIdResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostJobsJobIdWithResponse(ctx context.Context, jobId int, body PostJobsJobIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PostJobsJobIdResponse, error) {
+	rsp, err := c.PostJobsJobId(ctx, jobId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostJobsJobIdResponse(rsp)
+}
+
 // PostNodeWithBodyWithResponse request with arbitrary body returning *PostNodeResponse
 func (c *ClientWithResponses) PostNodeWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostNodeResponse, error) {
 	rsp, err := c.PostNodeWithBody(ctx, contentType, body, reqEditors...)
@@ -268,6 +855,146 @@ func (c *ClientWithResponses) PostNodeWithResponse(ctx context.Context, body Pos
 		return nil, err
 	}
 	return ParsePostNodeResponse(rsp)
+}
+
+// GetResourcesResourceIdWithResponse request returning *GetResourcesResourceIdResponse
+func (c *ClientWithResponses) GetResourcesResourceIdWithResponse(ctx context.Context, resourceId int, reqEditors ...RequestEditorFn) (*GetResourcesResourceIdResponse, error) {
+	rsp, err := c.GetResourcesResourceId(ctx, resourceId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetResourcesResourceIdResponse(rsp)
+}
+
+// PostResourcesResourceIdWithBodyWithResponse request with arbitrary body returning *PostResourcesResourceIdResponse
+func (c *ClientWithResponses) PostResourcesResourceIdWithBodyWithResponse(ctx context.Context, resourceId int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostResourcesResourceIdResponse, error) {
+	rsp, err := c.PostResourcesResourceIdWithBody(ctx, resourceId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostResourcesResourceIdResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostResourcesResourceIdWithResponse(ctx context.Context, resourceId int, body PostResourcesResourceIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PostResourcesResourceIdResponse, error) {
+	rsp, err := c.PostResourcesResourceId(ctx, resourceId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostResourcesResourceIdResponse(rsp)
+}
+
+// ParseGetJobsResponse parses an HTTP response from a GetJobsWithResponse call
+func ParseGetJobsResponse(rsp *http.Response) (*GetJobsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetJobsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []struct {
+			Command   []string `json:"command"`
+			Cpu       int      `json:"cpu"`
+			CreatedAt string   `json:"createdAt"`
+			ExitCode  int      `json:"exitCode"`
+			Id        int      `json:"id"`
+			Memory    int      `json:"memory"`
+			Name      string   `json:"name"`
+			Status    string   `json:"status"`
+			UpdatedAt string   `json:"updatedAt"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetJobsJobIdResponse parses an HTTP response from a GetJobsJobIdWithResponse call
+func ParseGetJobsJobIdResponse(rsp *http.Response) (*GetJobsJobIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetJobsJobIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			Command   []string `json:"command"`
+			Cpu       int      `json:"cpu"`
+			CreatedAt string   `json:"createdAt"`
+			ExitCode  int      `json:"exitCode"`
+			Id        int      `json:"id"`
+			Inputs    []struct {
+				Name       string `json:"name"`
+				ResourceId struct {
+					CreatedAt string  `json:"createdAt"`
+					Id        int     `json:"id"`
+					Name      string  `json:"name"`
+					Path      *string `json:"path"`
+					Size      *int    `json:"size"`
+					Status    string  `json:"status"`
+					Type      string  `json:"type"`
+					UpdatedAt string  `json:"updatedAt"`
+				} `json:"resourceId"`
+			} `json:"inputs"`
+			Memory  int    `json:"memory"`
+			Name    string `json:"name"`
+			Outputs []struct {
+				Name       string `json:"name"`
+				ResourceId struct {
+					CreatedAt string  `json:"createdAt"`
+					Id        int     `json:"id"`
+					Name      string  `json:"name"`
+					Path      *string `json:"path"`
+					Size      *int    `json:"size"`
+					Status    string  `json:"status"`
+					Type      string  `json:"type"`
+					UpdatedAt string  `json:"updatedAt"`
+				} `json:"resourceId"`
+			} `json:"outputs"`
+			Status    string `json:"status"`
+			UpdatedAt string `json:"updatedAt"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostJobsJobIdResponse parses an HTTP response from a PostJobsJobIdWithResponse call
+func ParsePostJobsJobIdResponse(rsp *http.Response) (*PostJobsJobIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostJobsJobIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	return response, nil
 }
 
 // ParsePostNodeResponse parses an HTTP response from a PostNodeWithResponse call
@@ -293,6 +1020,57 @@ func ParsePostNodeResponse(rsp *http.Response) (*PostNodeResponse, error) {
 		}
 		response.JSON200 = &dest
 
+	}
+
+	return response, nil
+}
+
+// ParseGetResourcesResourceIdResponse parses an HTTP response from a GetResourcesResourceIdWithResponse call
+func ParseGetResourcesResourceIdResponse(rsp *http.Response) (*GetResourcesResourceIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetResourcesResourceIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			CreatedAt string  `json:"createdAt"`
+			Id        int     `json:"id"`
+			Name      string  `json:"name"`
+			Path      *string `json:"path"`
+			Size      *int    `json:"size"`
+			Status    string  `json:"status"`
+			Type      string  `json:"type"`
+			UpdatedAt string  `json:"updatedAt"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostResourcesResourceIdResponse parses an HTTP response from a PostResourcesResourceIdWithResponse call
+func ParsePostResourcesResourceIdResponse(rsp *http.Response) (*PostResourcesResourceIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostResourcesResourceIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
 	}
 
 	return response, nil

@@ -29,11 +29,87 @@ enum NodeStatus {
 }
 
 model Node {
-    ipAddress String @id
-    name      String    
+    name      String @id
+    ipAddress String @unique
     cpu       Int
     memory    Int
     status    NodeStatus
     createdAt DateTime   @default(now())
     updatedAt DateTime   @updatedAt
+    jobs      Job[]
+}
+enum JobStatus {
+    created
+    queued
+    running
+    finished
+    failed
+}
+enum ResourceStatus {
+    creating
+    running
+    uploading
+    finished
+    failed
+}
+
+model Job {
+    id        Int         @id @default(autoincrement())
+    toolId    Int
+    Tool      Tool @relation(fields: [toolId],references: [id])
+    name      String
+    command   String[]
+    cpu       Int
+    memory    Int
+    status    JobStatus
+    nodeName  String?
+    node      Node?       @relation(fields: [nodeName], references: [name])
+    exitCode  Int         @default(0)
+    createdAt DateTime    @default(now())
+    updatedAt DateTime    @updatedAt
+    startedAt DateTime?
+    finishedAt DateTime?
+    inputs JobInput[]
+    outputs JobOutput[]
+}
+
+model JobOutput {
+    jobId      Int
+    name       String
+    job        Job      @relation(fields: [jobId], references: [id])
+    resourceId Int
+    resource   Resource @relation(fields: [resourceId], references: [id])
+
+    @@id([jobId, resourceId])
+}
+model Tool {
+    id        Int         @id @default(autoincrement())
+    name      String
+    createdAt DateTime    @default(now())
+    updatedAt DateTime    @updatedAt
+    template  Json
+    jobs    Job[]
+}
+
+model JobInput {
+    jobId      Int
+    name       String
+    job        Job      @relation(fields: [jobId], references: [id])
+    resourceId Int
+    resource   Resource @relation(fields: [resourceId], references: [id])
+
+    @@id([jobId, resourceId])
+}
+
+model Resource {
+    id        Int            @id @default(autoincrement())
+    name      String
+    type      String
+    path      String?
+    size      Int?
+    status    ResourceStatus
+    createdAt DateTime       @default(now())
+    updatedAt DateTime       @updatedAt
+    JobOutput JobOutput[]
+    JobInputs JobInput[]
 }
